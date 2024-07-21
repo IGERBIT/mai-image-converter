@@ -42,9 +42,7 @@
 			fetch('api/png', { 
 				method: 'POST',
 			 	body: JSON.stringify({ target_file: id }),
-				headers: {
-					'Content-Type': 'application/json'
-				}
+				headers: {	'Content-Type': 'application/json'	}
 			}).then(() => updateTasks())
 		}
 
@@ -72,14 +70,25 @@
 
 				let html = ''
 				for (let task of data.tasks) {
-					html += `<li><span>${task}</span></li>`
+
+					let caption = task.caption;
+					let status = task.status;
+
+					let download = ''
+					if(task.resultFileId){
+						download = `<a href="api/files/${task.resultFileId}" >Download</a>`
+					}
+
+					html += `<li><span>${caption}</span> <span>${status}</span> ${download}</li>`
 				}
 
 				taskList.innerHTML = html;
+
+				setTimeout(() => updateTasks(), 2000)
 			}
 
 		getFiles();
-		updateTasks()
+		updateTasks();
 	</script>
 
 

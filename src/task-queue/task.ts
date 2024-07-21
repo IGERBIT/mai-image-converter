@@ -50,7 +50,7 @@ export abstract class SimpleGMConvertTask extends Task {
 		
 		let capitalInExt = this._inputFileExt.replace('.', '').toUpperCase();
 		let capitalOutExt = this._ext.replace('.', '').toUpperCase();
-		return `${capitalInExt} -> ${capitalOutExt} conversion`;
+		return `${capitalInExt} -> ${capitalOutExt} conversion of ${this._inputFile.filename}`;
 	}
 
 
@@ -65,16 +65,17 @@ export abstract class SimpleGMConvertTask extends Task {
 
 	public start(): void {
 		try {
-			gm(this._inputFile.realFilename).write(this._outputEntry.realFilename, this.onResultHandler);
+			this._started = true;
+			gm(this._inputFile.realFilename).write(this._outputEntry.realFilename, this.onResultHandler.bind(this));
 		} catch (error) {
-			this._error = error as Error;
+			if (error instanceof Error) this._error = error;
 		}
 	}
 
 	public getState(): TaskState {
 		if (this._error) return { progress: 0, status: 'error' };
-
-
+		
+		
 		if (this._done) return { progress: 1, status: 'finished' };
 		if (this._started) return { progress: this._progress, status: 'processing' };
 
@@ -88,6 +89,7 @@ export abstract class SimpleGMConvertTask extends Task {
 	}
 
 	protected onResultHandler(err: Error | null, stdout: Readable, stderr: Readable, cmd: string) {
+		console.log(this, arguments)
 		if (err) {
 			this._error = err;
 			return;

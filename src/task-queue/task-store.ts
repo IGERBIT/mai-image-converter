@@ -8,6 +8,8 @@ class Store {
 		let id = v4();
 		this._tasks.set(id, task)
 
+		task.start()
+
 		return id;
 	}
 

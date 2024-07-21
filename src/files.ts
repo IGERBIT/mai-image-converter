@@ -49,8 +49,6 @@ export function addFileToUser(req: Request, entry: FileEntry) {
 router.post('/upload', upload.any(), (req: Request, res: Response) => {			
 	var files = req.files as Express.Multer.File[];
 
-	console.log(req);
-
 	for (let file of files) {
 		addFileToUser(req, { id: v4(), filename: file.originalname, realFilename: file.filename })
 	}
@@ -61,7 +59,6 @@ router.post('/upload', upload.any(), (req: Request, res: Response) => {
 
 router.get('/list', (req, res) => {
 	let files = req.session.files || []
-	console.group(req.session)
 	res.json({ files }).status(200)
 })
 
@@ -71,11 +68,7 @@ router.get('/:id', (req: Request, res) => {
 	let entry = req.session.files?.find(x => x.id == id);
 	if (!entry) return res.status(404).send('No such file');
 
-	
-
 	return res.download(path.join(USER_FILES_STORAGE, entry.realFilename), entry.filename);
-
-
 })
 
 export { router as filesRouter } 

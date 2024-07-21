@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { TaskStore } from "./task-queue/task-store";
 import { addFileToUser } from "./files";
-import { Task } from "./task-queue/task";
+import { Task, TaskStatus } from "./task-queue/task";
 
 const router = Router();
 
@@ -34,10 +34,39 @@ router.get('/status/:id/result', (req: Request, res: Response) => {
 	return res.json()
 })
 
+interface TaskDTO {
+	caption: string,
+	progress: number,
+	status: string,
+	error?: string,
+	resultFileId?: string
+	
+}
+
+function localizeStatus(status: TaskStatus): string {
+	switch (status) {
+		case "created": return 'Создан';
+		case "processing": return 'В обработке';
+		case "finished": return 'Завершён';
+		case "error": return 'Ошибка';
+	}
+	return 'Ошибка'
+}
+
 router.get('/list', (req, res) => {
-	let tasks = req.session.tasks || []
-	console.log(tasks)
-	res.json({ tasks })
+	let tasks = getUserTasks(req)
+
+	let DTOs: TaskDTO[] = tasks.map(x => {
+
+		let state = x.getState();
+		let dto: TaskDTO = { caption: x.caption, progress: state.progress, status: localizeStatus(state.status) }
+		if (state.status == 'finished') dto.resultFileId = x.getResult()?.id;
+
+		return dto;
+
+	});
+
+	res.json({ tasks: DTOs })
 })
 
 export function addTaskToUser(req: Request, taskId: string) {
@@ -45,15 +74,12 @@ export function addTaskToUser(req: Request, taskId: string) {
 	if(tasks.some(t => t == taskId)) return
 	tasks.push(taskId);
 	req.session.tasks = tasks;
-
-	console.log(`task ${taskId} added to ${req.sessionID} session`)
-	console.log(req.session.tasks)
 }
 
 export function getUserTasks(req: Request): Task[] {
 	let taskIds = req.session.tasks || [];
 
-	return taskIds.map(TaskStore.get).filter(x => x) as Task[];
+	return taskIds.map(x => TaskStore.get(x)).filter(x => x) as Task[];
 }
 
 export { router as taskRouter }
