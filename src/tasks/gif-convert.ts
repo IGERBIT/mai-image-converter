@@ -1,7 +1,5 @@
-import { SimpleGMConvertTask, Task, TaskState } from "../task-queue/task";
-import gm from "gm";
-import { Readable } from "stream";
-import { FileEntry } from "../files";
+import { SimpleGMConvertTask } from "../task-queue/task";
+import { FileEntry } from "../file-store";
 
 export class GifConvertTask extends SimpleGMConvertTask {
 	constructor(input: FileEntry) {

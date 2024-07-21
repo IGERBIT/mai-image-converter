@@ -1,9 +1,10 @@
-import fs from "fs";
-import { FileEntry } from "../files";
+import { getFilePath as getUserFilePath } from "../files";
 import { v4 } from "uuid";
 import { parse } from "path";
 import { Readable } from "stream";
-import gm from "gm";
+import _gm from "gm"
+import { FileEntry, FileStore } from "../file-store";
+const gm = _gm.subClass({ imageMagick: '7+' })
 
 
 export type TaskState = { progress: number, status: TaskStatus, }
@@ -66,7 +67,7 @@ export abstract class SimpleGMConvertTask extends Task {
 	public start(): void {
 		try {
 			this._started = true;
-			gm(this._inputFile.realFilename).write(this._outputEntry.realFilename, this.onResultHandler.bind(this));
+			gm(getUserFilePath(this._inputFile.realFilename)).write(getUserFilePath(this._outputEntry.realFilename), this.onResultHandler.bind(this));
 		} catch (error) {
 			if (error instanceof Error) this._error = error;
 		}
@@ -110,7 +111,7 @@ export abstract class SimpleGMConvertTask extends Task {
 	protected createOutputEntry() {
 		var parts = parse(this._inputFile.filename);
 		var rParts = parse(this._inputFile.realFilename);
-		this._outputEntry = { id: v4(), filename: `${parts.name}_converted${parts.ext}`, realFilename: `${rParts.name}_converted${this._ext}` }
+		this._outputEntry = FileStore.register(`${parts.name}_converted${this._ext}`, `${rParts.name}_converted${this._ext}`)
 	}
 
 }

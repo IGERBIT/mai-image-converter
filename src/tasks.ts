@@ -28,7 +28,7 @@ router.get('/status/:id/result', (req: Request, res: Response) => {
 	}
 
 	if (task.getState().status == 'finished') {
-		addFileToUser(req, task.getResult()!);
+		addFileToUser(req, task.getResult()!.id);
 	}
 
 	return res.json()

@@ -3,7 +3,6 @@ import express from "express";
 import dotenv from "dotenv"
 import session from "express-session";
 import { api_router } from "./api";
-import { FileEntry } from "./files";
 import bodyParser from "body-parser";
 
 dotenv.config();
@@ -33,7 +32,7 @@ app.listen(port, () => {
 
 declare module "express-session" {
 	interface SessionData {
-		files: FileEntry[]
+		files: string[]
 		tasks: string[],
 		nextFileIndex: number
 	}

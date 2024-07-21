@@ -3,8 +3,13 @@ import fs from "fs";
 import multer, {  } from "multer";
 import path, { parse } from "path";
 import { v4 } from "uuid";
+import { FileEntry, FileStore } from "./file-store";
 
-const USER_FILES_STORAGE = '/user-files';
+export const USER_FILES_STORAGE = '/user-files';
+
+export function getFilePath(filename: string) {
+	return path.join(USER_FILES_STORAGE, filename);
+}
 
 const router = Router();
 if (!fs.existsSync(USER_FILES_STORAGE)) {
@@ -34,41 +39,48 @@ const upload = multer({
 	})
 })
 
-export type FileEntry = { realFilename: string, filename: string, id: string }
 
 
-export function addFileToUser(req: Request, entry: FileEntry) {
-	if (!entry) return
+
+export function addFileToUser(req: Request, id: string) {
+	if (!id) return
 	let files = req.session.files || [];
-	if (files.some(x => x.id == entry.id)) return;
-	files.push(entry);
+	if (files.some(x => x == id)) return;
+	files.push(id);
 	req.session.files = files;	
 }
 
+
+export function getUserFilesEntries(req: Request): FileEntry[] {
+	return (req.session.files || []).map(x => FileStore.get(x)).filter(x => x) as FileEntry[];
+}
 
 router.post('/upload', upload.any(), (req: Request, res: Response) => {			
 	var files = req.files as Express.Multer.File[];
 
 	for (let file of files) {
-		addFileToUser(req, { id: v4(), filename: file.originalname, realFilename: file.filename })
+		var entry = FileStore.register(file.originalname, file.filename);
+		addFileToUser(req, entry.id);
 	}
 
 	res.status(200).end();
-	
 })
 
 router.get('/list', (req, res) => {
-	let files = req.session.files || []
+	
+	let files = getUserFilesEntries(req);
+
+
 	res.json({ files }).status(200)
 })
 
 router.get('/:id', (req: Request, res) => {
 	let id: any = req.params['id'];
 
-	let entry = req.session.files?.find(x => x.id == id);
+	let entry = FileStore.get(id);
 	if (!entry) return res.status(404).send('No such file');
 
-	return res.download(path.join(USER_FILES_STORAGE, entry.realFilename), entry.filename);
+	return res.download(getFilePath(entry.realFilename), entry.filename);
 })
 
 export { router as filesRouter } 
