@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+<body>
+	<input id="image-file" type="file" />
+
+	<button id="upload-btn" type="button">Upload</button>
+
+
+	<h2>Files</h2>
+	<div class="files-list">
+		<ol id="files-list">
+			
+		</ol>
+	</div>
+
+	<h2>Task</h2>
+	<div class="files-list">
+		<ol id="task-list">
+	
+		</ol>
+	</div>
+
+	<script>
+		const fileField = document.getElementById('image-file');
+		const uploadBtn = document.getElementById('upload-btn');
+		const fileList = document.getElementById('files-list');
+		const taskList = document.getElementById('task-list');
+
+		uploadBtn.addEventListener('click', () => {
+			var file = fileField.files[0];
+			let form = new FormData();
+			form.append('image', file)
+			fetch('api/files/upload', { method: 'POST', body: form }).then(() => getFiles())
+		});
+
+		function toPng(id) {
+			fetch('api/png', { 
+				method: 'POST',
+			 	body: JSON.stringify({ target_file: id }),
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			}).then(() => updateTasks())
+		}
+
+
+		async function getFiles() {
+			let result = await fetch('api/files/list');
+			let data = await result.json();
+
+			let html = ''
+			for( let file of data.files){
+
+				const pngBtn = `<button onClick="toPng('${file.id}')" >PNG</button>`;;
+				const jpgBtn = `<button onClick="toJpg('${file.id}')" >JPG</button>`;;
+				const gifBtn = `<button onClick="toGif('${file.id}')" >GIF</button>`;;
+
+				html += `<li><span>${file.filename}</span> - <a href="api/files/${file.id}" >Download</a> | Make ${pngBtn}${jpgBtn}${gifBtn}</li>`
+			}
+
+			fileList.innerHTML = html;
+		}
+
+		async function updateTasks() {
+				let result = await fetch('api/tasks/list');
+				let data = await result.json();
+
+				let html = ''
+				for (let task of data.tasks) {
+					html += `<li><span>${task}</span></li>`
+				}
+
+				taskList.innerHTML = html;
+			}
+
+		getFiles();
+		updateTasks()
+	</script>
+
+
+	<templbuttonte>
+
+	</templbuttonte>
+</body>
+</html>
